@@ -3,19 +3,42 @@
 
 typedef unsigned char byte;
 
-class MIDItrack: public std::vector<byte>{
+class MIDIVec: public std::vector<byte>{
+public:
+    template<class... Args>
+    void addBytes(Args... data){
+        for(const auto d : {data...}){
+            push_back(d);
+        }
+    }
+};
+
+class MIDIData: public MIDIVec{
     private:
+    uint64_t tempo;
     uint64_t delay = 0;
 
     public:
 
-    void AddBytes(byte data){
-        push_back(data);
+    MIDIData():tempo(1000000){
+        // Add Track end
+        addBytes(0x00);
+        addBytes(0xFF);
+
+        // ADD misc settings
+        addBytes(0x58, 0x04, 0x04, 0x02, 0x18, 0x08, 0x00, 0xFF);
+
+        // Add Tempo
+        addBytes(0x51);
+        addBytes(0x03);
+        addBytes(tempo >> 16);
+        addBytes(tempo >>  8);
+        addBytes(tempo >>  0);
+        addBytes(0x00);
     }
 
-    void Flush()
+    void writeDelay()
     {
-        
         uint64_t splitBytes;
         uint64_t firstByte;
 
@@ -28,112 +51,84 @@ class MIDItrack: public std::vector<byte>{
             else{
                 std::cout << "ERROR: delay can not be greater than 16383" << std::endl;
             }
-            AddBytes(splitBytes);
+            addBytes(splitBytes);
             splitBytes = delay - (128*firstByte);
-            AddBytes(splitBytes);
+            addBytes(splitBytes);
         }
         else{
             splitBytes = delay;
-            AddBytes(splitBytes);
+            addBytes(splitBytes);
         }
-    }
-
-    void AddDelay(uint64_t delayAmount){
-        delay += delayAmount;
-        Flush();
         delay = 0;
     }
 
-    void KeyOn(int note, int pressure = 127, int channel = 0)
-    {
-        if(note >= 0){
-            AddBytes(0x00);
-            AddBytes(0x90|channel);
-            AddBytes(note);
-            AddBytes(pressure);
-        }
+    void addDelay(uint64_t delayAmount){
+        delay += delayAmount;
     }
     
-    void KeyOff(int note, int pressure = 127, int channel = 0)
+    void pressKey(bool keyPressed, int note, int pressure = 127, int channel = 0)
     {
-        if(note >= 0){
-            AddBytes(0x80|channel);
-            AddBytes(note);
-            AddBytes(pressure);    
+        writeDelay();
+        int64_t event = 0x80;
+        if(keyPressed){
+            event = 0x90;
+        }
+
+        if(0 <= channel <= 16){
+            addBytes(event|channel);
+        }else{
+            std::cerr << "WARNING: The channel has to be between 0 and 16!" << std::endl;
+            addBytes(0x80|0);
+        }
+        if(0 <= note <= 127){
+            addBytes(note);
+        }else{
+            std::cerr << "ERROR: Given note does not exist";
+        }
+        if(0 < pressure <= 127){
+            addBytes(pressure);
+        }else{
+            std::cerr << "WARNING: The Volume/Velocity can not bee higher then 127!\br"
+                      << "Furthermore 0 equals to NoteOff!" << std::endl;
+            addBytes(127);
         }
     }
 
     void changeSynth(int device){
-        AddBytes(0xC0);
-        AddBytes(device);
+        addBytes(0xC0);
+        addBytes(device);
     }
 
 };
 
-class MIDIFile: public std::vector<byte>{
+class MIDIFile: public MIDIVec{
 private:
-    uint64_t tempo;
-    MIDItrack* data;
+    MIDIData* data;
 public:
 
-    MIDIFile(MIDItrack* midiData): tempo(1000000), data(midiData)
+    MIDIFile(MIDIData* midiData): data(midiData)
     {
     }
 
-    void AddBytes(byte data){
-        push_back(data);
-    }
-
-    void Start(){
-        const byte midiPrefix[18] = 
-        {
+    void packFile(){
+        addBytes(
             0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
             0x00, 0x01, 0x00, 0x01, 0x03, 0xE8, 0x4D, 0x54,
-            0x72, 0x6B,
-        };
+            0x72, 0x6B
+        );
 
-        for(int i = 0; i < 18; i++){
-            AddBytes(midiPrefix[i]);
-        }
+        // Add File End
+        data->addBytes(0x00, 0xFF, 0x2F, 0x00);
 
-        uint64_t dataSize = data->size() + 19;
-        // Add Track Size
-        AddBytes(dataSize >> 24);
-        AddBytes(dataSize >> 16);
-        AddBytes(dataSize >>  8);
-        AddBytes(dataSize >>  0);
+        // Add Data Size
+        uint64_t dataSize = data->size();
+        addBytes(dataSize >> 24,
+                 dataSize >> 16,
+                 dataSize >>  8,
+                 dataSize >>  0);
 
-        // Add Track end
-        AddBytes(0x00);
-        AddBytes(0xFF);
-
-        // ADD misc settings
-        AddBytes(0x58);
-        AddBytes(0x04);
-        AddBytes(0x04);
-        AddBytes(0x02);
-        AddBytes(0x18);
-        AddBytes(0x08);
-        AddBytes(0x00);
-        AddBytes(0xFF);
-
-        // Add Tempo
-        AddBytes(0x51);
-        AddBytes(0x03);
-        AddBytes(tempo >> 16);
-        AddBytes(tempo >>  8);
-        AddBytes(tempo >>  0);
-        AddBytes(0x00);
-
+        // Add Data to the File
         insert(end(), data->begin(), data->end());
-    }
-
-    void Finish(){
-        // Add File end
-        AddBytes(0xFF);
-        AddBytes(0x2F);
-        AddBytes(0x00);
-
     }
 
 };
@@ -149,46 +144,46 @@ int main()
 
     int octave = 0;
 
-    MIDItrack* midiData = new MIDItrack;
+    MIDIData* midiData = new MIDIData();
     MIDIFile midiFile(midiData);
 
     midiData->changeSynth(1);
 
-    midiData->KeyOn(40, 111);
-    midiData->AddDelay(500);
-    midiData->KeyOff(40, 32);
+    midiData->pressKey(true, 40, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 40, 32);
 
-    midiData->KeyOn(70, 111);
-    midiData->AddDelay(500);
-    midiData->KeyOff(70, 32);
+    midiData->pressKey(true, 70, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 70, 32);
 
-    midiData->KeyOn(40, 111);
-    midiData->AddDelay(500);
-    midiData->KeyOff(40, 32);
+    midiData->pressKey(true, 40, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 40, 32);
 
-    midiData->KeyOn(70, 111);
-    midiData->AddDelay(500);
-    midiData->KeyOff(70, 32);
+    midiData->pressKey(true, 70, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 70, 32);
 
-    midiData->KeyOn(40, 111);
-    midiData->AddDelay(500);
-    midiData->KeyOff(40, 32);
+    midiData->pressKey(true, 40, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 40, 32);
 
-    midiData->KeyOn(59, 130);
-    midiData->AddDelay(250);
+    midiData->pressKey(true, 40, 111);
+    midiData->addDelay(500);
+    midiData->pressKey(false, 40, 32);
+
+    midiData->pressKey(true, 59, 130);
+    midiData->addDelay(250);
+    midiData->pressKey(false, 59, 00);
 
 
+    midiFile.packFile();
 
-    midiFile.Start();
-    midiFile.Finish();
-
-    FILE* fs = std::fopen("myMidiSound.mid", "wb");
+    char const* songName = "my_music/myMidiSound.mid";
+    FILE* fs = std::fopen(songName, "wb");
     std::fwrite(&midiFile.at(0), 1, midiFile.size(), fs);
     std::fclose(fs);
-
-    // Am anfang und am ende fehlt noch 00 
-    // Außerdem wird die länge falsch ausgegeben
-    // sonst sollte das soweit funktionieren
 
     return 0;
 }
