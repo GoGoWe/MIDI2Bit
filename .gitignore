@@ -40,3 +40,7 @@ research/
 # CMake
 cmake-build-*/
 
+# Jetbrains
+.idea/*
+
+
