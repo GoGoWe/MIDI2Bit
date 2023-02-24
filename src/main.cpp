@@ -182,6 +182,10 @@ int main()
 
     char const* songName = "my_music/myMidiSound.mid";
     FILE* fs = std::fopen(songName, "wb");
+    if(fs == nullptr){
+        printf("could not open file");
+        exit(1);
+    }
     std::fwrite(&midiFile.at(0), 1, midiFile.size(), fs);
     std::fclose(fs);
 
