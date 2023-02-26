@@ -2,14 +2,30 @@
 // Created by philip on 26.02.23.
 //
 
+#include <map>
 #include "MidiStringParser.h"
 
+// reference: https://www.zem-college.de/midi/mc_taben.htm
+// Interpreter Features:
+// Note parse (C D E ...)
+// sharp Parse (#)
+// pitch parse (-2 -> 8)
+// value limit (max 127)
 std::vector<int> MidiStringParser::generateMidiInts(std::string input) {
     std::vector<std::string> *stringBySpace = splitStringBySpace(input);
+
+    // TODO, handle lower/upper case
+    for (const auto &item: *stringBySpace){
+        int note = noteValues[item[0]];
+        // TODO needs range check
+        bool isSharp = item[1] == '#';
+    }
 
 
     return std::vector<int>();
 }
+
+
 
 std::vector<std::string> * MidiStringParser::splitStringBySpace(const std::string& input) {
     auto *strings = new std::vector<std::string>;
@@ -26,7 +42,6 @@ std::vector<std::string> * MidiStringParser::splitStringBySpace(const std::strin
     }
 
     while (spacePos != std::string::npos) {
-        // what happens if space is in first position?
         auto substring = input.substr(lastPos, spacePos - lastPos);
         strings->push_back(substring);
 
