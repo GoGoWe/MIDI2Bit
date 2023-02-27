@@ -15,9 +15,9 @@ public:
     std::vector<int> generateMidiInts(std::string input);
 
 private:
-    std::vector<std::string> *splitStringBySpace(const std::string &input);
+    static std::vector<std::string> *splitStringBySpace(const std::string &input);
 
-    std::map<char, int> noteValues = {
+    std::map<char, int8_t> noteValues = {
             {'C', 0},
             {'D', 1},
             {'E', 2},

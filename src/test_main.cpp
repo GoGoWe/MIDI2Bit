@@ -6,5 +6,5 @@
 
 int main(){
     MidiStringParser parser;
-    parser.generateMidiInts("C D E F-10 g-20 #c-20");
+    parser.generateMidiInts("C D E F-10 g-20 C#-20");
 }
