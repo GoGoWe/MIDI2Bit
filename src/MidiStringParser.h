@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 
+#define SPLIT_DELIMITER ' '
+
 class MidiStringParser {
 public:
     std::vector<int8_t> *generateMidiInts(std::string input);

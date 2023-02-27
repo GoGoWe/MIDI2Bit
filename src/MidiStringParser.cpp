@@ -74,15 +74,15 @@ int8_t MidiStringParser::calculateNoteValue(int8_t note, bool major, int8_t pitc
 std::vector<std::string> *MidiStringParser::splitStringBySpace(const std::string &input) {
     auto *strings = new std::vector<std::string>;
     unsigned long lastPos = 0;
-    auto spacePos = input.find(' ', lastPos);
+    auto spacePos = input.find(SPLIT_DELIMITER, lastPos);
 
     // move to first actual character, otherwise there will be empty strings in the vector
     if (spacePos == 0) {
-        while (input[lastPos] == ' ') {
+        while (input[lastPos] == SPLIT_DELIMITER) {
             lastPos++;
         }
         // rerun find to have a correct value in spacePos
-        spacePos = input.find(' ', lastPos);
+        spacePos = input.find(SPLIT_DELIMITER, lastPos);
     }
 
     while (spacePos != std::string::npos) {
@@ -90,7 +90,7 @@ std::vector<std::string> *MidiStringParser::splitStringBySpace(const std::string
         strings->push_back(substring);
 
         lastPos = spacePos + 1;
-        spacePos = input.find(' ', lastPos);
+        spacePos = input.find(SPLIT_DELIMITER, lastPos);
 
     }
 
