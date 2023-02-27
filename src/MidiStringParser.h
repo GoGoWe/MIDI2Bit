@@ -12,20 +12,28 @@
 
 class MidiStringParser {
 public:
-    std::vector<int> generateMidiInts(std::string input);
+    std::vector<int8_t> *generateMidiInts(std::string input);
 
 private:
     static std::vector<std::string> *splitStringBySpace(const std::string &input);
 
     std::map<char, int8_t> noteValues = {
             {'C', 0},
-            {'D', 1},
-            {'E', 2},
-            {'F', 3},
-            {'G', 4},
-            {'A', 5},
-            {'B', 6},
+            {'D', 2},
+            {'E', 4},
+            {'F', 5},
+            {'G', 7},
+            {'A', 9},
+            {'B', 11},
     };
+
+    std::vector<int8_t> validMajorNotes = {
+            0, 2, 5, 7, 9
+    };
+
+    bool noteIsMajor(int8_t note);
+
+    int8_t calculateNoteValue(int8_t note, bool major, int8_t pitch);
 };
 
 
