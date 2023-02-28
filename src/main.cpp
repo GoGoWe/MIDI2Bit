@@ -5,6 +5,7 @@ typedef unsigned char byte;
 
 class MIDIVec: public std::vector<byte>{
 public:
+    // Add Possiblity to Add Chars as Args
     template<class... Args>
     void addBytes(Args... data){
         for(const auto d : {data...}){
@@ -24,7 +25,7 @@ class MIDIData: public MIDIVec{
         // Add Track end
         addBytes(0x00);
         addBytes(0xFF);
-
+        // TODO: Make this nicer
         // ADD misc settings
         addBytes(0x58, 0x04, 0x04, 0x02, 0x18, 0x08, 0x00, 0xFF);
 
