@@ -12,6 +12,8 @@
 
 #define SPLIT_DELIMITER ' '
 
+#define DEFAULT_PITCH 0
+
 class MidiStringParser {
 public:
     std::vector<int8_t> *generateMidiInts(std::string input);

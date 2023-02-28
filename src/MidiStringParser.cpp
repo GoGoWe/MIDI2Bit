@@ -26,7 +26,8 @@ std::vector<int8_t> *MidiStringParser::generateMidiInts(std::string input) {
                 continue;
             }
 
-            int8_t noteValue = calculateNoteValue(note, isMajor, 0);
+
+            int8_t noteValue = calculateNoteValue(note, isMajor, DEFAULT_PITCH);
             parsedNoteValues->push_back(noteValue);
             continue;
         }
