@@ -20,7 +20,11 @@ std::vector<int8_t> *MidiStringParser::generateMidiInts(std::string input) {
 
         bool isMajor = item[1] == '#';
 
-        if (item.length() == 1 || item.length() == 2) {
+        if (item.length() == 1 || item.length() == 2 && item[2] == '#') {
+            if(item[0] == '.'){
+                parsedNoteValues->push_back(-2);
+                continue;
+            }
 
             int8_t noteValue = calculateNoteValue(note, isMajor, 0);
             parsedNoteValues->push_back(noteValue);
@@ -55,7 +59,7 @@ int8_t MidiStringParser::calculateNoteValue(int8_t note, bool major, int8_t pitc
 
     int8_t noteValue = pitch * 12 + note;
     if (major && !noteIsMajor(note)) {
-        printf("invalid major note");
+        printf("invalid major note\n");
         return -1;
     }
 
