@@ -140,8 +140,8 @@ int main()
     const std::vector<int8_t> *noteVector;
     std::string input;
     std::cout << "Type in your song" << std::endl;
-    std::cin >> input;
-    parser.generateMidiInts(input);
+    std::getline(std::cin,  input);
+    noteVector =  parser.generateMidiInts(input);
     MIDIData* midiData = new MIDIData();
     MIDIFile midiFile(midiData);
 
@@ -150,7 +150,6 @@ int main()
     const int release = 32;
 
     for (const auto  &note: *noteVector){
-        std::cout << "Your Notes" << note << " ";
         midiData->pressKey(true, note, pressure);
         midiData->addDelay(500);
         midiData->pressKey(false, note, release);
@@ -158,7 +157,7 @@ int main()
 
     midiFile.packFile();
 
-    char const* songName = "my_music/myMidiSound.mid";
+    char const* songName = "myMidiSound.mid";
     FILE* fs = std::fopen(songName, "wb");
     if(fs == nullptr){
         printf("could not open file");
