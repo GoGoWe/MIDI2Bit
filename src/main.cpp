@@ -141,7 +141,7 @@ int main()
     std::string input;
     std::cout << "Type in your song" << std::endl;
     std::getline(std::cin,  input);
-    noteVector =  parser.generateMidiInts(input);
+    noteVector = parser.generateMidiInts(input);
     MIDIData* midiData = new MIDIData();
     MIDIFile midiFile(midiData);
 
@@ -149,10 +149,25 @@ int main()
     const int pressure = 111;
     const int release = 32;
 
-    for (const auto  &note: *noteVector){
-        midiData->pressKey(true, note, pressure);
-        midiData->addDelay(500);
-        midiData->pressKey(false, note, release);
+    // A2 . B2
+
+    for (int i = 0; i < noteVector->size(); i++){
+        if(noteVector->at(i) != -1){
+            midiData->pressKey(true, noteVector->at(i), pressure);
+            midiData->addDelay(500);
+
+            int j = 0;
+            while(noteVector->size() > i+j+1 && noteVector->at(i + j + 1) == -2)
+            {
+                midiData->addDelay(500);
+                j++;
+            }
+            midiData->pressKey(false, noteVector->at(i), release);
+            i = i + j;
+        }
+        else{
+            std::cerr << "ERROR: Wrong Inputs" << std::endl;
+        }
     }
 
     midiFile.packFile();
