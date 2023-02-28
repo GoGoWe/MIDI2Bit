@@ -54,7 +54,7 @@ int8_t MidiStringParser::calculateNoteValue(int8_t note, bool major, int8_t pitc
     pitch += 2; // the Midi values start at -2 pitch
 
     int8_t noteValue = pitch * 12 + note;
-    if(major && !noteIsMajor(note)){
+    if (major && !noteIsMajor(note)) {
         printf("invalid major note");
         return -1;
     }
@@ -63,7 +63,7 @@ int8_t MidiStringParser::calculateNoteValue(int8_t note, bool major, int8_t pitc
         noteValue++;
     }
 
-    if (noteValue > 127) {
+    if (noteValue > 127 || noteValue  < 0) {
         printf("note value out of range: %i\n", noteValue);
         return -1;
     }
