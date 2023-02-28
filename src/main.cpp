@@ -1,5 +1,6 @@
 #include <vector> 
 #include <iostream>
+#include <MidiStringParser.h>
 
 typedef unsigned char byte;
 
@@ -135,48 +136,25 @@ public:
 
 int main()
 {
-    const char x = 99;
-
-    const char notes[64] =
-    {
-        2,-1,2, 9,x, 7,x,6,4,1,x,x,
-    };
-
-    int octave = 0;
-
+    MidiStringParser parser;
+    const std::vector<int8_t> *noteVector;
+    std::string input;
+    std::cout << "Type in your song" << std::endl;
+    std::cin >> input;
+    parser.generateMidiInts(input);
     MIDIData* midiData = new MIDIData();
     MIDIFile midiFile(midiData);
 
     midiData->changeSynth(1);
+    const int pressure = 111;
+    const int release = 32;
 
-    midiData->pressKey(true, 40, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 40, 32);
-
-    midiData->pressKey(true, 70, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 70, 32);
-
-    midiData->pressKey(true, 40, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 40, 32);
-
-    midiData->pressKey(true, 70, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 70, 32);
-
-    midiData->pressKey(true, 40, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 40, 32);
-
-    midiData->pressKey(true, 40, 111);
-    midiData->addDelay(500);
-    midiData->pressKey(false, 40, 32);
-
-    midiData->pressKey(true, 59, 130);
-    midiData->addDelay(250);
-    midiData->pressKey(false, 59, 00);
-
+    for (const auto  &note: *noteVector){
+        std::cout << "Your Notes" << note << " ";
+        midiData->pressKey(true, note, pressure);
+        midiData->addDelay(500);
+        midiData->pressKey(false, note, release);
+    }
 
     midiFile.packFile();
 
