@@ -16,22 +16,25 @@ std::vector<int8_t> *MidiStringParser::generateMidiInts(std::string input) {
         std::transform(item.begin(), item.end(), item.begin(),
                        [](unsigned char c) { return std::toupper(c); });
 
-        int8_t note = noteValues[item[0]];
+        // handle break sign
+        if(item[0] == '.'){
+            parsedNoteValues->push_back(-2);
+            continue;
+        }
 
+        // noteValues contains chars and their respective note Value
+        int8_t note = noteValues[item[0]];
+        // major notes are denoted by the # sign
         bool isMajor = item[1] == '#';
 
+        // if the note has no pitch simply use default pitch
         if (item.length() == 1 || item.length() == 2 && item[2] == '#') {
-            if(item[0] == '.'){
-                parsedNoteValues->push_back(-2);
-                continue;
-            }
-
-
             int8_t noteValue = calculateNoteValue(note, isMajor, DEFAULT_PITCH);
             parsedNoteValues->push_back(noteValue);
             continue;
         }
 
+        // remove note for pitch parsing
         if (isMajor) {
             item = item.erase(0, 2);
         } else {
@@ -42,10 +45,8 @@ std::vector<int8_t> *MidiStringParser::generateMidiInts(std::string input) {
 
         int8_t noteValue = calculateNoteValue(note, isMajor, pitch);
 
-
         parsedNoteValues->push_back(noteValue);
     }
-
 
     return parsedNoteValues;
 }
@@ -64,6 +65,7 @@ int8_t MidiStringParser::calculateNoteValue(int8_t note, bool major, int8_t pitc
         return -1;
     }
 
+    // Major note is one value increased by 1
     if (major) {
         noteValue++;
     }
@@ -90,13 +92,13 @@ std::vector<std::string> *MidiStringParser::splitStringBySpace(const std::string
         spacePos = input.find(SPLIT_DELIMITER, lastPos);
     }
 
+    // iterate through string until there are no spaces left
     while (spacePos != std::string::npos) {
         auto substring = input.substr(lastPos, spacePos - lastPos);
         strings->push_back(substring);
 
         lastPos = spacePos + 1;
         spacePos = input.find(SPLIT_DELIMITER, lastPos);
-
     }
 
     // if we are not at the input end just take the rest of the input
@@ -108,6 +110,7 @@ std::vector<std::string> *MidiStringParser::splitStringBySpace(const std::string
     return strings;
 }
 
+// determines a major note via the validMajorNotes vector
 bool MidiStringParser::noteIsMajor(int8_t note) {
     return std::find(validMajorNotes.begin(), validMajorNotes.end(), note) != validMajorNotes.end();
 }
