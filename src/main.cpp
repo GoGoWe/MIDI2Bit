@@ -1,11 +1,20 @@
+//
+// author: Gabriel Wuwer
+// date: 26.02.23.
+//
+
 #include <vector> 
 #include <iostream>
 #include <MidiStringParser.h>
 
 typedef unsigned char byte;
 
+// Class to provide basic data storing abilities
 class MIDIVec: public std::vector<byte>{
 public:
+
+    // Function to add bytes to the object 
+    // with a variable rate and type of arguments
     template<class... Args>
     void addBytes(Args... data){
         for(const auto d : {data...}){
@@ -67,6 +76,10 @@ class MIDIData: public MIDIVec{
         delay += delayAmount;
     }
     
+    // keyPressed:  is the event and Key Down or Key Up event?
+    // note:        which note should be played
+    // pressure:    how loud should the note sound
+    // channel:     on which channel should the note be played
     void pressKey(bool keyPressed, int note, int pressure = 127, int channel = 0)
     {
         writeDelay();
@@ -112,13 +125,14 @@ public:
     }
 
     void packFile(){
+        // Add MIDI Signature 
         addBytes(
             0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
             0x00, 0x01, 0x00, 0x01, 0x03, 0xE8, 0x4D, 0x54,
             0x72, 0x6B
         );
 
-        // Add File End
+        // Add Data End to MIDIData
         data->addBytes(0x00, 0xFF, 0x2F, 0x00);
 
         // Add Data Size
